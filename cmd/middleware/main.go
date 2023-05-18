@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/adamhoof/InternetOfToys/pkg/config"
+	databaseInterface "github.com/adamhoof/InternetOfToys/pkg/database"
 	database "github.com/adamhoof/InternetOfToys/pkg/database/implementations"
 	"github.com/adamhoof/InternetOfToys/pkg/mqtt_handler"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -11,12 +12,12 @@ import (
 
 func main() {
 	// Load the configuration
-	conf, err := config.LoadConfig("path/to/Config.json")
+	conf, err := config.LoadConfig("/home/adamhoof/Projects/InternetOfToys/Config.json")
 	if err != nil {
 		log.Fatalf("Failed to load conf: %v", err)
 	}
 
-	// Connect to the database
+	// Connect to the databaseInterface
 	connectionString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s",
 		conf.Database.Host,
 		conf.Database.Port,
@@ -25,7 +26,7 @@ func main() {
 		conf.Database.Dbname)
 	db, err := database.NewPostgres(connectionString)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		log.Fatalf("Failed to connect to databaseInterface: %v", err)
 	}
 
 	// Connect to the MQTT broker
@@ -36,17 +37,26 @@ func main() {
 	}
 
 	// Subscribe to the /boot topic
+	if err = mqttClient.Subscribe(mqtt_handler.TopicBoot, 2, bootHandler(db)); err != nil {
+		log.Fatalf("failed to subscribe: %s", err)
+	}
+
+	// Subscribe to the /command_reply topic
+	if err = mqttClient.Subscribe(mqtt_handler.TopicCommandReply, 0, commandReplyHandler(db)); err != nil {
+		log.Fatalf("failed to subscribe: %s", err)
+	}
 
 	// Start the web server or bot here
 }
 
-func bootHandler(db database.Database) func(client mqtt.Client, msg mqtt.Message) {
+func bootHandler(db databaseInterface.Database) mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
 		// Handle boot messages here
+
 	}
 }
 
-func commandReplyHandler(db database.Database) func(client mqtt.Client, msg mqtt.Message) {
+func commandReplyHandler(db databaseInterface.Database) mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
 		// Handle command reply messages here
 	}
