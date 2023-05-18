@@ -9,7 +9,8 @@ type MQTTClient struct {
 }
 
 func NewMQTTClient(broker string, clientID string) *MQTTClient {
-	options := mqtt.NewClientOptions().AddBroker(broker)
+	options := mqtt.NewClientOptions()
+	options.AddBroker(broker)
 	options.SetClientID(clientID)
 	options.SetOrderMatters(false)
 	options.SetCleanSession(false)
@@ -21,15 +22,18 @@ func NewMQTTClient(broker string, clientID string) *MQTTClient {
 
 func (c *MQTTClient) Connect() error {
 	token := c.client.Connect()
+	token.Wait()
 	return token.Error()
 }
 
 func (c *MQTTClient) Subscribe(topic string, qos byte, callback mqtt.MessageHandler) error {
 	token := c.client.Subscribe(topic, qos, callback)
+	token.Wait()
 	return token.Error()
 }
 
 func (c *MQTTClient) Publish(topic string, qos byte, payload string) error {
 	token := c.client.Publish(topic, qos, false, payload)
+	token.Wait()
 	return token.Error()
 }
