@@ -3,6 +3,8 @@ package database
 type Device struct {
 	MacAddress string
 	Functions  []string
+	Room       string
+	Type       string
 	// add other fields as needed
 }
 
